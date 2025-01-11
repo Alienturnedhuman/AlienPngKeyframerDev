@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+    <head>
+        <title>A Temporary Recorder of JSON data</title>
+        <style type="text/css">
+#canvas_recorder
+{
+    width: 1024px;
+    height: 768px;
+    background-color:black;
+}            
+.Hidden
+{
+    display:none;
+}
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas_recorder">
+
+        </canvas>
+        <textarea id="output_json" class="Hidden">
+
+        </textarea>
+        <script type="text/javascript">
+
+var recorder = document.getElementById("canvas_recorder");
+var ctx = recorder.getContext("2d");
+var text_output = document.getElementById("output_json");
+
+var RECORDING = {
+    interval : null
+    ,
+    data : null
+    ,
+    x : null
+    ,
+    y : null
+    ,
+    recording : false
+}
+
+function draw_point(ctx,x,y,color)
+{
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = color || "red";
+    ctx.fill();
+}
+
+function record_tick(e)
+{
+    RECORDING.data.push(make_point(RECORDING.x,RECORDING.y,1024,768));
+}
+function move_mouse(e)
+{
+    if(RECORDING.recording)
+    {
+        draw_point(ctx,e.offsetX,e.offsetY,"green");
+        RECORDING.x = e.offsetX;
+        RECORDING.y = e.offsetY;
+    }
+}
+
+function make_point(x,y,width,height)
+{
+    width/=2;
+    height/=2;
+    var divisor = width > height ? width : height;
+    return [
+        (x - width)/divisor , (y-height)/divisor
+    ];
+}
+
+function start_recording(e)
+{
+    draw_point(ctx,e.offsetX,e.offsetY,"cyan");
+    recorder.width = recorder.offsetWidth;
+    recorder.height = recorder.offsetHeight;
+    RECORDING.data = [make_point(e.offsetX,e.offsetY,1024,768)];
+    RECORDING.interval = setInterval(record_tick,16);
+    RECORDING.recording = true;
+}
+
+
+
+function stop_recording(e)
+{
+    RECORDING.recording = false;
+    draw_point(ctx,e.offsetX,e.offsetY,"red");
+    RECORDING.data.push(make_point(e.offsetX,e.offsetY,1024,768))
+    text_output.value=JSON.stringify({
+        "frame_data" : RECORDING.data
+    });
+    text_output.classList.remove("Hidden");
+}
+
+recorder.addEventListener("mousedown",start_recording);
+recorder.addEventListener("mousemove",move_mouse);
+recorder.addEventListener("mouseup",stop_recording);
+
+        </script>
+    </body>
+</html>
