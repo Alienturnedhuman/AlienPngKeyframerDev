@@ -1,0 +1,19 @@
+# list of files to be ignored
+
+.DS_Store
+.AppleDouble
+.LSOverride
+thumbs.db
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+__alien_test_page.html
+*/.DS_Store
+testbin
+testbin/
+testbin/*
