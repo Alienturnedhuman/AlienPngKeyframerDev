@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <textarea id="input_data"></textarea>
+        <script type="text/javascript">
+
+function float_pos_to_uint8(coord)
+{
+    var buffer = new ArrayBuffer(16);
+    var float_pair = new Float64Array(buffer);
+    float_pair[0] = coord[0];
+    float_pair[1] = coord[1];
+    return new Uint8Array(buffer);
+}
+
+function uint8_to_float_pos(uint8_array)
+{
+    var float_pair = new Float64Array(uint8_array.buffer);
+    return [float_pair[0],float_pair[1]];
+}
+
+function coords_to_png(coords_list)
+{
+    var keyframe_count = coords_list.length;
+    var temp_canvas = document.createElement("canvas");
+    temp_canvas.width = keyframe_count;
+    temp_canvas.height = 4;
+    
+    var temp_ctx = temp_canvas.getContext("2d");
+    var keyframe_slice = temp_ctx.getImageData(0,0,1,4);
+
+    var i , u , coords_bytes;
+    for(i = 0 ; i < keyframe_count ; ++i)
+    {
+        coords_bytes = float_pos_to_uint8(coords_list[i]);
+        for(u = 0 ; u<16 ; ++u)
+        {
+            keyframe_slice.data[u] = coords_bytes[u]
+        }
+        temp_ctx.putImageData(keyframe_slice,i,0);
+    }
+    return temp_canvas;
+}
+
+        </script>
+    </body>
+</html>
