@@ -1,0 +1,3 @@
+[submodule "testbed/static/AlienPngKeyframer"]
+	path = testbed/static/AlienPngKeyframer
+	url = https://github.com/Alienturnedhuman/AlienPngKeyframer
