@@ -1,20 +1,36 @@
 <!doctype html>
 <html>
     <head>
-
+        <style type="text/css">
+canvas,button,textarea
+{
+    display: block;
+}
+        </style>
     </head>
     <body>
         <textarea id="input_data"></textarea>
         <button id="gen_png">Generate PNG</button>
         <script type="text/javascript">
-
+/*
 function float_pos_to_uint8(coord)
 {
     var buffer = new ArrayBuffer(16);
     var float_pair = new Float64Array(buffer);
     float_pair[0] = coord[0];
     float_pair[1] = coord[1];
-    return new Uint8Array(buffer);
+    var r = new Uint8Array(buffer);
+    return r;
+}
+*/
+function float_pos_to_uint8(coord)
+{
+    const buffer = new ArrayBuffer(16); // Allocate 8 bytes
+    const dataView = new DataView(buffer);
+    dataView.setFloat64(0, coord[0], true); // Write the float (little-endian)
+    dataView.setFloat64(8, coord[1], true);
+    return new Uint8Array(buffer); // Create an unsigned int array from the buffer
+
 }
 
 function uint8_to_float_pos(uint8_array)
@@ -23,15 +39,16 @@ function uint8_to_float_pos(uint8_array)
     return [float_pair[0],float_pair[1]];
 }
 
+
 function coords_to_png(coords_list)
 {
     var keyframe_count = coords_list.length;
     var temp_canvas = document.createElement("canvas");
     temp_canvas.width = keyframe_count;
-    temp_canvas.height = 4;
+    temp_canvas.height = 16;
     
     var temp_ctx = temp_canvas.getContext("2d");
-    var keyframe_slice = temp_ctx.getImageData(0,0,1,4);
+    var keyframe_slice = temp_ctx.getImageData(0,0,1,16);
 
     var i , u , coords_bytes;
     for(i = 0 ; i < keyframe_count ; ++i)
@@ -39,7 +56,8 @@ function coords_to_png(coords_list)
         coords_bytes = float_pos_to_uint8(coords_list[i]);
         for(u = 0 ; u<16 ; ++u)
         {
-            keyframe_slice.data[u] = coords_bytes[u]
+            keyframe_slice.data[u*4] = coords_bytes[u];
+            keyframe_slice.data[u*4+3] = 255;
         }
         temp_ctx.putImageData(keyframe_slice,i,0);
     }

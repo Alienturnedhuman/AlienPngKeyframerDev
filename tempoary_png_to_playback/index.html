@@ -18,7 +18,7 @@
     <body>
         <div id="StartPlayback">
             <h2>Playback From Image</h2>
-            <img src="record/temporary_recordings/spirally_thing.png" id="playback_data">
+            <img src="record/temporary_recordings/spirally_thing_red.png" id="playback_data">
             <button id="do_playback">Playback</button>
 
 
@@ -60,15 +60,28 @@ PLAYBACK_CONTROLLER = {
     max_frames : null
     ,
     interval : null
+    ,
+    temp : null
+    ,
+    img : null
 }
-
+/*
 
 function uint8_to_float_pos(uint8_array)
 {
     var float_pair = new Float64Array(uint8_array.buffer);
     return [float_pair[0],float_pair[1]];
-}
+}*/
 
+
+function uint8_to_float_pos(uint8Array) {
+    if (uint8Array.length !== 16) {
+        throw new Error("Array length must be 8 bytes.");
+    }
+    const buffer = uint8Array.buffer;
+    const dataView = new DataView(buffer);
+    return [dataView.getFloat64(0, true),dataView.getFloat64(8, true)]; // Read the float (little-endian)
+}
 
 
 function tick()
@@ -79,9 +92,17 @@ function tick()
         PLAYBACK_CONTROLLER.interval = null;
         console.log("finished");
     }
-    var keyframe = PLAYBACK_CONTROLLER.ctx.getImageData(PLAYBACK_CONTROLLER.current_frame,0,1,4);
+    var keyframe = PLAYBACK_CONTROLLER.ctx.getImageData(PLAYBACK_CONTROLLER.current_frame,0,1,16);
 
-    var position = uint8_to_float_pos(keyframe.data);
+    var uint_array = new Uint8Array(16) , i;
+    for(i = 0 ; i < 16 ; ++i)
+    {
+        uint_array[i] = keyframe.data[i*4];
+    }
+
+    var position = uint8_to_float_pos(uint_array);
+
+    PLAYBACK_CONTROLLER.temp.push(position);
 
     render_point(playback_ctx,position,"green");
     //document.title = position[0] + " , " + position[1];
@@ -103,7 +124,6 @@ function jsontick()
 
     var position = PLAYBACK_CONTROLLER.json_frames[PLAYBACK_CONTROLLER.current_frame];
 
-    AYA = [position,PLAYBACK_CONTROLLER.current_frame];
 
     render_point(playback_ctx,position,"cyan");
     //document.title = position[0] + " , " + position[1];
@@ -131,16 +151,39 @@ do_playback.addEventListener("click",function()
     PLAYBACK_CONTROLLER.canvas.width = playback_data.width;
     PLAYBACK_CONTROLLER.canvas.height = playback_data.height;
     PLAYBACK_CONTROLLER.canvas.classList.add("Hidden");
+
+
     document.body.appendChild(PLAYBACK_CONTROLLER.canvas);
 
+    PLAYBACK_CONTROLLER.img = new Image();
 
+    PLAYBACK_CONTROLLER.img.onload = function()
+    {
+
+        PLAYBACK_CONTROLLER.ctx = PLAYBACK_CONTROLLER.canvas.getContext("2d", { willReadFrequently: true });
+        PLAYBACK_CONTROLLER.ctx.drawImage(this,0,0);
+
+        PLAYBACK_CONTROLLER.temp = [];
+
+        PLAYBACK_CONTROLLER.max_frames = PLAYBACK_CONTROLLER.canvas.width;
+
+    ViewPlayback.classList.remove("Hidden");
+    }
+
+    PLAYBACK_CONTROLLER.img.src = playback_data.src;
+
+    /*
     PLAYBACK_CONTROLLER.ctx = PLAYBACK_CONTROLLER.canvas.getContext("2d", { willReadFrequently: true });
     PLAYBACK_CONTROLLER.ctx.drawImage(playback_data,0,0);
 
+    PLAYBACK_CONTROLLER.temp = [];
+
     PLAYBACK_CONTROLLER.max_frames = PLAYBACK_CONTROLLER.canvas.width;
 
+    */
+
     StartPlayback.classList.add("Hidden");
-    ViewPlayback.classList.remove("Hidden");
+    //ViewPlayback.classList.remove("Hidden");
     console.log("do_playback");
 });
 
