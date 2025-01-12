@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+    <head>
+        <title>PNG to playlack</title>
+        <style type="text/css">
+.Hidden
+{
+    display:none;
+}
+#playback_canvas
+{
+    display: block;
+    background-color:black;
+}
+
+        </style>
+    </head>
+    <body>
+        <div id="StartPlayback">
+            <h2>Playback From Image</h2>
+            <img src="record/temporary_recordings/patterns.png" id="playback_data">
+            <button id="do_playback">Playback</button>
+        </div>
+        <div id="ViewPlayback" class="Hidden">
+            <h2>Playback</h2>
+            <canvas id="playback_canvas" width="800" height="700"></canvas>
+            <button id="start_playback">Restart Playback</button> Speed: <input id="playback_speed" type="number" value="1.0" step="0.1" min="0.1" max="10.0">
+        </div>
+        <script type="text/javascript">
+
+StartPlayback = document.getElementById("StartPlayback");
+ViewPlayback = document.getElementById("ViewPlayback");
+
+playback_canvas = document.getElementById("playback_canvas");
+playback_ctx = playback_canvas.getContext("2d");
+playback_data = document.getElementById("playback_data");
+do_playback = document.getElementById("do_playback");
+start_playback = document.getElementById("start_playback");
+playback_speed = document.getElementById("playback_speed");
+
+PLAYBACK_CONTROLLER = {
+    canvas : null
+    ,
+    ctx : null
+    ,
+    data : null
+    ,
+    current_frame : null
+    ,
+    max_frames : null
+    ,
+    interval : null
+}
+
+
+function uint8_to_float_pos(uint8_array)
+{
+    var float_pair = new Float64Array(uint8_array.buffer);
+    return [float_pair[0],float_pair[1]];
+}
+
+
+
+function tick()
+{
+    if(PLAYBACK_CONTROLLER.current_frame>=PLAYBACK_CONTROLLER.max_frames)
+    {
+        clearInterval(PLAYBACK_CONTROLLER.interval);
+        PLAYBACK_CONTROLLER.interval = null;
+        console.log("finished");
+    }
+    var keyframe = PLAYBACK_CONTROLLER.ctx.getImageData(PLAYBACK_CONTROLLER.current_frame,0,1,4);
+
+    var position = uint8_to_float_pos(keyframe.data);
+
+    render_point(playback_ctx,position,"green");
+    //document.title = position[0] + " , " + position[1];
+
+    ++PLAYBACK_CONTROLLER.current_frame;
+}
+
+do_playback.addEventListener("click",function()
+{
+    PLAYBACK_CONTROLLER.canvas = document.createElement("canvas");
+    PLAYBACK_CONTROLLER.canvas.width = playback_data.width;
+    PLAYBACK_CONTROLLER.canvas.height = playback_data.height;
+    PLAYBACK_CONTROLLER.canvas.classList.add("Hidden");
+    document.body.appendChild(PLAYBACK_CONTROLLER.canvas);
+
+
+    PLAYBACK_CONTROLLER.ctx = PLAYBACK_CONTROLLER.canvas.getContext("2d", { willReadFrequently: true });
+    PLAYBACK_CONTROLLER.ctx.drawImage(playback_data,0,0);
+
+    PLAYBACK_CONTROLLER.max_frames = PLAYBACK_CONTROLLER.canvas.width;
+
+    StartPlayback.classList.add("Hidden");
+    ViewPlayback.classList.remove("Hidden");
+    console.log("do_playback");
+});
+
+start_playback.addEventListener("click",function(){
+    if(PLAYBACK_CONTROLLER.ctx)
+    {
+        PLAYBACK_CONTROLLER.interval = setInterval(tick,16 / playback_speed.value);
+    }
+})
+
+
+
+// graphics stuff
+
+function draw_point(ctx,x,y,color)
+{
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = color || "red";
+    ctx.fill();
+}
+
+
+function point_to_pos(x,y,width,height)
+{
+    width/=2;
+    height/=2;
+    var divisor = width > height ? width : height;
+    return [
+        divisor * x + width , divisor * y + height
+    ];
+}
+
+function render_point(ctx,point,color)
+{
+    color = color || red;
+    var pos = point_to_pos(point[0],point[1],800,700);
+    draw_point(ctx,pos[0],pos[1],color);
+}
+
+        </script>
+    </body>
+</html>
