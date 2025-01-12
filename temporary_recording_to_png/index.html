@@ -5,6 +5,7 @@
     </head>
     <body>
         <textarea id="input_data"></textarea>
+        <button id="gen_png">Generate PNG</button>
         <script type="text/javascript">
 
 function float_pos_to_uint8(coord)
@@ -44,6 +45,11 @@ function coords_to_png(coords_list)
     }
     return temp_canvas;
 }
+
+document.getElementById("gen_png").addEventListener("click",function()
+{
+    document.body.appendChild(coords_to_png(JSON.parse(document.getElementById("input_data").value)["frame_data"]));
+})
 
         </script>
     </body>

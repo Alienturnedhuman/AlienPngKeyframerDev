@@ -18,8 +18,13 @@
     <body>
         <div id="StartPlayback">
             <h2>Playback From Image</h2>
-            <img src="record/temporary_recordings/patterns.png" id="playback_data">
+            <img src="record/temporary_recordings/spirally_thing.png" id="playback_data">
             <button id="do_playback">Playback</button>
+
+
+            <h2>Playback From JSON</h2>
+            <textarea id="playback_text"></textarea>
+            <button id="do_textplayback">Playback</button>
         </div>
         <div id="ViewPlayback" class="Hidden">
             <h2>Playback</h2>
@@ -35,10 +40,15 @@ playback_canvas = document.getElementById("playback_canvas");
 playback_ctx = playback_canvas.getContext("2d");
 playback_data = document.getElementById("playback_data");
 do_playback = document.getElementById("do_playback");
+
+playback_text = document.getElementById("playback_text");
+do_textplayback = document.getElementById("do_textplayback");
 start_playback = document.getElementById("start_playback");
 playback_speed = document.getElementById("playback_speed");
 
 PLAYBACK_CONTROLLER = {
+    json_frames : null
+    ,
     canvas : null
     ,
     ctx : null
@@ -79,6 +89,42 @@ function tick()
     ++PLAYBACK_CONTROLLER.current_frame;
 }
 
+
+
+function jsontick()
+{
+    if(PLAYBACK_CONTROLLER.current_frame>=PLAYBACK_CONTROLLER.max_frames)
+    {
+        clearInterval(PLAYBACK_CONTROLLER.interval);
+        PLAYBACK_CONTROLLER.interval = null;
+        console.log("finished");
+    }
+    //var keyframe = PLAYBACK_CONTROLLER.ctx.getImageData(PLAYBACK_CONTROLLER.current_frame,0,1,4);
+
+    var position = PLAYBACK_CONTROLLER.json_frames[PLAYBACK_CONTROLLER.current_frame];
+
+    AYA = [position,PLAYBACK_CONTROLLER.current_frame];
+
+    render_point(playback_ctx,position,"cyan");
+    //document.title = position[0] + " , " + position[1];
+
+    ++PLAYBACK_CONTROLLER.current_frame;
+}
+
+do_textplayback.addEventListener("click",function()
+{
+    PLAYBACK_CONTROLLER.json_frames = JSON.parse(playback_text.value)["frame_data"]
+
+
+
+    PLAYBACK_CONTROLLER.max_frames = PLAYBACK_CONTROLLER.json_frames.length;
+
+    StartPlayback.classList.add("Hidden");
+    ViewPlayback.classList.remove("Hidden");
+    console.log("do_playback");
+});
+
+
 do_playback.addEventListener("click",function()
 {
     PLAYBACK_CONTROLLER.canvas = document.createElement("canvas");
@@ -99,9 +145,15 @@ do_playback.addEventListener("click",function()
 });
 
 start_playback.addEventListener("click",function(){
+    PLAYBACK_CONTROLLER.current_frame = 0;
     if(PLAYBACK_CONTROLLER.ctx)
     {
         PLAYBACK_CONTROLLER.interval = setInterval(tick,16 / playback_speed.value);
+    }
+    else if(PLAYBACK_CONTROLLER.json_frames)
+    {
+
+        PLAYBACK_CONTROLLER.interval = setInterval(jsontick,16 / playback_speed.value);
     }
 })
 
